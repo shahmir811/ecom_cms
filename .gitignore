@@ -13,9 +13,9 @@ env/
 db.sqlite3
 *.sqlite3
 *.log
-media/
-staticfiles/
-static/
+# media/
+# staticfiles/
+# static/
 
 # Ignore secret settings
 *.env

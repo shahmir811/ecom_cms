@@ -1,0 +1,52 @@
+{% extends "main.html" %} 
+
+{% block page_title %}Users List{% endblock %}
+
+
+{% block content %}
+
+<h1 class="main-heading">Users List</h1>
+
+<div class="row mb-20">
+  <div class="col-md-12">
+    <a href="{% url 'users:register' %}" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Create User</a>
+  </div>
+</div>
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>Username</th>
+      <th>Name</th>
+      <th>Email</th>
+      <th>SuperUser</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td>{{ user.username }}</td>
+      <td>{{ user.first_name }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ user.is_superuser }}</td>
+      <td class="actions-column">
+        <a href="{% url 'users:update-profile' user.profile.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update Profile"><i class="fa fa-user" aria-hidden="true"></i></a>
+        <a href="#" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update Password"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+        <a href="#" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Remove User"><i class="fa fa-trash" aria-hidden="true"></i></a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
+
+{% block js_files %}
+
+<script>
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+</script>
+
+{% endblock %}

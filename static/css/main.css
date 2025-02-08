@@ -1,3 +1,7 @@
+body {
+	padding-bottom: 50px;
+}
+
 .alert-container {
 	position: fixed;
 	top: 60px;
@@ -6,4 +10,18 @@
 	z-index: 1050;
 	width: 100%;
 	max-width: 700px;
+}
+
+.main-heading {
+	text-align: center;
+	margin: 20px 0px;
+}
+
+.mb-20 {
+	margin-bottom: 20px;
+}
+
+.actions-column {
+	display: flex;
+	justify-content: space-evenly;
 }

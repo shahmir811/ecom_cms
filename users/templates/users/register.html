@@ -1,11 +1,13 @@
-{% extends "main.html" %}
+{% extends "main.html" %} 
 
-{% block page_title %}Login{% endblock %}
+{% block page_title %}Register User{% endblock %}
+
 
 {% block content %}
-<div class="loginWrapper">
-  <h1 class="main-heading">Login</h1>
-  <form action="" method="POST" novalidate>
+
+<h1 class="main-heading">Register User</h1>
+
+<form action="" method="POST" novalidate>
     {% csrf_token %}
 
     {% for field in form %}
@@ -30,7 +32,9 @@
       </div>
     {% endfor %}
 
-    <input type="submit" value="Login" class="btn btn-primary">
+    <input type="submit" value="Register" class="btn btn-primary">
+        <a href="{% url 'users:list' %}" class="btn btn-danger">Cancel</a>
   </form>
-</div>
+
+
 {% endblock %}

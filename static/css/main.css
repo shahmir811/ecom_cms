@@ -1,3 +1,9 @@
-body {
-	background-color: aquamarine;
+.alert-container {
+	position: fixed;
+	top: 60px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1050;
+	width: 100%;
+	max-width: 700px;
 }

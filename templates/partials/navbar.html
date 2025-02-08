@@ -13,8 +13,13 @@
           <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="{% url "users:login" %}">Login</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Logout</a>
+          <li class="nav-item" style="align-self: center;">
+            <form action="{% url 'users:logout' %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="nav-link active btn btn-link p-0 border-0" >
+                Logout
+              </button>
+            </form>
           </li>
         </ul>
       </div>

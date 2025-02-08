@@ -1,10 +1,36 @@
-{% extends "main.html" %} 
+{% extends "main.html" %}
 
 {% block page_title %}Login{% endblock %}
 
-
 {% block content %}
+<div class="loginWrapper">
+  <h1>Login</h1>
+  <form action="" method="POST" novalidate>
+    {% csrf_token %}
 
-<h1>Login</h1>
+    {% for field in form %}
+      <div class="mb-3">
+        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+        
+        {# Add 'is-invalid' class if the field has errors #}
+        <input 
+          type="{{ field.field.widget.input_type }}" 
+          name="{{ field.name }}" 
+          id="{{ field.id_for_label }}" 
+          class="form-control {% if field.errors %}is-invalid{% endif %}" 
+          value="{{ field.value|default:'' }}"
+        >
+        
+        {# Show Bootstrap-styled error messages #}
+        {% for error in field.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
 
+    <input type="submit" value="Login" class="btn btn-primary">
+  </form>
+</div>
 {% endblock %}

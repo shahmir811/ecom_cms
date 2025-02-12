@@ -32,8 +32,14 @@
       <td>{{ user.is_superuser }}</td>
       <td class="actions-column">
         <a href="{% url 'users:update-profile' user.profile.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update Profile"><i class="fa fa-user" aria-hidden="true"></i></a>
-        <a href="#" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update Password"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-        <a href="#" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Remove User"><i class="fa fa-trash" aria-hidden="true"></i></a>
+        <a href="{% url 'users:update-password' user.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update Password"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+
+        {% if request.user.is_superuser and user.id != request.user.id %}
+          <a href="{% url 'users:delete-user' user.id %}" class="text-danger" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Remove User">
+              <i class="fa fa-trash" aria-hidden="true"></i>
+          </a>
+        {% endif %}
+
       </td>
     </tr>
     {% endfor %}

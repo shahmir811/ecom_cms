@@ -1,15 +1,18 @@
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView, ListView, DeleteView
+from django.contrib.auth.forms import AdminPasswordChangeForm
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LogoutView
+from django.contrib.auth.views import LogoutView, PasswordChangeView
 from django.urls import reverse_lazy
 from django.views.generic.edit import FormView
 from django.contrib.auth.models import User
 from django.contrib.auth import login 
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.forms import SetPasswordForm
 
-from .forms import CustomAuthenticationForm, UserRegistrationForm, UserProfileForm
+from .forms import CustomAuthenticationForm, UserRegistrationForm, UserProfileForm, UserPasswordUpdateForm
 from .models import Profile
 
 class StartingPageView(TemplateView):
@@ -60,7 +63,7 @@ class UserRegistrationView(FormView):
         user = form.save(commit=False)
         user.set_password(form.cleaned_data["password"])  # Hash the password
         user.save()
-        login(self.request, user)  # Log the user in
+
         messages.success(self.request, "Registration successful! You are now logged in.")
         return super().form_valid(form)
 
@@ -81,3 +84,49 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         messages.success(self.request, "Profile updated successfully!")
         return reverse_lazy('users:list')
+
+class AdminPasswordUpdateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+    template_name = 'users/update_password.html'
+    form_class = SetPasswordForm  # Using SetPasswordForm since old password isn't required
+    success_url = reverse_lazy('users:list')
+
+    def get_form_kwargs(self):
+        """Pass the user instance to the form."""
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.get_object()  # Ensure the form gets the correct user
+        return kwargs
+
+    def get_object(self, queryset=None):
+        """Fetch the user whose password is being updated."""
+        return get_object_or_404(User, pk=self.kwargs['pk'])
+
+    def test_func(self):
+        """Allow only superusers to update another user's password."""
+        return self.request.user.is_superuser
+
+    def form_valid(self, form):
+        """Set the new password and save the user."""
+        user = self.get_object()
+        form.save()  # Automatically sets the new password correctly
+        messages.success(self.request, "User's password has been updated successfully!")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        """Handle form errors."""
+        messages.error(self.request, "Please correct the errors below.")
+        return super().form_invalid(form)
+
+class UserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = User
+    template_name = 'users/delete_user.html'
+    success_url = reverse_lazy('users:list')
+
+    def test_func(self):
+        """Allow only superusers to delete users."""
+        return self.request.user.is_superuser
+
+    def delete(self, request, *args, **kwargs):
+        """Show a success message when a user is deleted."""
+        user = self.get_object()
+        messages.success(request, f"User {user.username} has been deleted successfully.")
+        return super().delete(request, *args, **kwargs)

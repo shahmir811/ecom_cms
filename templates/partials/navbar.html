@@ -10,6 +10,17 @@
       <div class="d-flex">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {% if request.user.is_authenticated %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Hi {{ request.user.username }}
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">Action</a></li>
+                <li><a class="dropdown-item" href="#">Another action</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Something else here</a></li>
+              </ul>
+            </li>
             <li class="nav-item">
               {% comment %} <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}" href="{% url 'users:list' %}">Users</a> {% endcomment %}
               <a class="nav-link {% if 'users' in request.path %}active{% endif %}" href="{% url 'users:list' %}">Users</a>

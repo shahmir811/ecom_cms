@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import PasswordChangeForm
 
 from .models import Profile
 
@@ -128,3 +129,37 @@ class UserProfileForm(forms.ModelForm):
             if profile_image.size > 5 * 1024 * 1024:  # 5MB limit
                 raise forms.ValidationError('Profile image size should not exceed 5MB.')
         return profile_image
+
+
+class UserPasswordUpdateForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Extract the user from kwargs
+        super().__init__(user, *args, **kwargs)
+
+        # Remove old_password field for superusers
+        if user and user.is_superuser:
+            del self.fields['old_password']
+
+    def clean_old_password(self):
+        """Skip old password validation for superusers."""
+        if self.user.is_superuser:
+            return ""
+        return super().clean_old_password()
+
+    new_password1 = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter new password'}),
+        label="New Password"
+    )
+    
+    new_password2 = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm new password'}),
+        label="Confirm Password"
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password1 = cleaned_data.get("new_password1")
+        new_password2 = cleaned_data.get("new_password2")
+
+        if new_password1 and new_password2 and new_password1 != new_password2:
+            self.add_error("new_password2", "Passwords do not match.")

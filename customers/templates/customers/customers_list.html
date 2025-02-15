@@ -1,0 +1,62 @@
+{% extends "main.html" %} 
+
+{% block page_title %}Customers{% endblock %}
+
+
+{% block content %}
+
+<h1 class="main-heading">Customers List</h1>
+
+<div class="row mb-20">
+  <div class="col-md-12">
+    <a href="{% url 'customers:create-customer' %}" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Create Customer</a>
+  </div>
+</div> 
+
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>City</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for customer in customers %}
+    <tr>
+      <td>{{ customer.name }}</td>
+      <td>{{ customer.email }}</td>
+      <td>{{ customer.phone }}</td>
+      <td>{{ customer.city }}</td>
+      <td class="actions-column">
+        <a href="{% url 'customers:update-customer' customer.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update details"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+
+        {% comment %} <a href="{% url 'Customers:update-profile' user.profile.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update Profile"><i class="fa fa-user" aria-hidden="true"></i></a>
+        <a href="{% url 'Customers:update-password' user.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update Password"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+
+        {% if request.user.is_superuser and user.id != request.user.id %}
+          <a href="{% url 'Customers:delete-user' user.id %}" class="text-danger" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Remove User">
+              <i class="fa fa-trash" aria-hidden="true"></i>
+          </a>
+        {% endif %} {% endcomment %}
+
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
+
+{% block js_files %}
+
+<script>
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,23 @@
+{% extends "main.html" %} 
+
+{% block page_title %}View Store{% endblock %}
+
+
+{% block content %}
+
+<h1 class="main-heading">Store Details</h1>
+
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title"><strong>Name:</strong> {{ store.name }}<br></h5>
+    <p class="card-text"><strong>Owner:</strong> {{ store.owner.name }}<br></p>
+
+
+    <a href="{% url 'customers:stores_update' store.id %}" class="btn btn-primary">Edit</a>
+    <a href="{% url 'customers:view-customer' store.owner.id %}" class="btn btn-primary">View Owner</a>
+    <a href="{% url 'customers:stores_list' %}" class="btn btn-secondary">Store List</a>
+  </div>
+</div>
+
+{% endblock %}

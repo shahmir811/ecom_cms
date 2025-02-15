@@ -1,5 +1,5 @@
 from django import forms
-from .models import Customer
+from .models import Customer, Store
 
 class CustomerForm(forms.ModelForm):
     class Meta:
@@ -15,3 +15,15 @@ class CustomerForm(forms.ModelForm):
             raise forms.ValidationError("A customer with this email already exists.")
         return email
 
+class StoreForm(forms.ModelForm):
+    owner = forms.ModelChoiceField(queryset=Customer.objects.all(), required=False, empty_label="Select a Customer")
+
+    class Meta:
+        model = Store
+        fields = ['name', 'owner', 'wallmart_key']
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if Store.objects.filter(name=name).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("A store with this name already exists.")
+        return name

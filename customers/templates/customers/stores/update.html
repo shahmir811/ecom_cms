@@ -1,0 +1,44 @@
+{% extends "main.html" %}
+
+{% block page_title %}Update Store{% endblock %}
+
+{% block content %}
+
+<h1 class="main-heading">Update Store Details</h1>
+
+<form action="" method="POST" novalidate>
+    {% csrf_token %}
+
+    {% for field in form %}
+      <div class="mb-3">
+        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+        
+        {% if field.field.widget.input_type == 'select' %}
+          <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control {% if field.errors %}is-invalid{% endif %}">
+            {% for choice in field.field.queryset %}
+              <option value="{{ choice.pk }}" {% if field.value == choice.pk %}selected{% endif %}>{{ choice }}</option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <input 
+            type="{{ field.field.widget.input_type }}" 
+            name="{{ field.name }}" 
+            id="{{ field.id_for_label }}" 
+            class="form-control {% if field.errors %}is-invalid{% endif %}" 
+            value="{{ field.value|default_if_none:'' }}"
+          >
+        {% endif %}
+        
+        {% for error in field.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <input type="submit" value="Update" class="btn btn-primary">
+    <a href="{% url 'customers:stores_list' %}" class="btn btn-danger">Cancel</a>
+</form>
+
+{% endblock %}

@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<h1 class="main-heading">Create new customer</h1>
+<h1 class="main-heading">Update Customer Details</h1>
 
 <form action="" method="POST" novalidate>
     {% csrf_token %}
@@ -32,7 +32,7 @@
       </div>
     {% endfor %}
 
-    <input type="submit" value="Create" class="btn btn-primary">
+    <input type="submit" value="Update" class="btn btn-primary">
         <a href="{% url 'customers:list' %}" class="btn btn-danger">Cancel</a>
   </form>
 {% endblock %}

@@ -21,6 +21,7 @@
       <th>Email</th>
       <th>Phone</th>
       <th>City</th>
+      <th>Stores</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -31,7 +32,10 @@
       <td>{{ customer.email }}</td>
       <td>{{ customer.phone }}</td>
       <td>{{ customer.city }}</td>
+      <td>{{ customer.stores.count }}</td>
       <td class="actions-column">
+        <a href="{% url 'customers:view-customer' customer.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View details"><i class="fa fa-bars" aria-hidden="true"></i></a>
+
         <a href="{% url 'customers:update-customer' customer.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update details"><i class="fa fa-pencil" aria-hidden="true"></i></a>
 
         {% comment %} <a href="{% url 'Customers:update-profile' user.profile.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Update Profile"><i class="fa fa-user" aria-hidden="true"></i></a>

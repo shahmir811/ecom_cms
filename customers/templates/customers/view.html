@@ -1,0 +1,48 @@
+{% extends "main.html" %} 
+
+{% block page_title %}View Customer{% endblock %}
+
+
+{% block content %}
+
+<h1 class="main-heading">Customer Details</h1>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title"><strong>Name:</strong> {{ customer.name }}<br></h5>
+    <p class="card-text"><strong>Email:</strong> {{ customer.email }}<br></p>
+    <p class="card-text"><strong>Phone:</strong> {{ customer.phone }}<br></p>
+    <p class="card-text"><strong>Address:</strong> {{ customer.address }}<br></p>
+    <p class="card-text"><strong>City:</strong> {{ customer.city }}<br></p>
+    <p class="card-text"><strong>State:</strong> {{ customer.state }}<br></p>
+    <p class="card-text"><strong>Created:</strong> {{ customer.created }}<br></p>
+
+    <a href="{% url 'customers:update-customer' customer.id %}" class="btn btn-primary">Edit</a>
+    <a href="{% url 'customers:list' %}" class="btn btn-secondary">Back to List</a>
+  </div>
+</div>
+
+<div>
+  <h2 class="main-heading">Stores</h2>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for store in customer.stores.all %}
+      <tr>
+        <td>{{ store.name }}</td>
+        <td>
+          <a href="{% url 'customers:stores_view' store.id %}" class="" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="View details"><i class="fa fa-bars" aria-hidden="true"></i></a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+{% endblock %}

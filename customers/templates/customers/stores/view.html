@@ -38,14 +38,17 @@
         {% for product in store.products.all %}
         <tr>
           <td>{{ product.name|default_if_none:"" }}</td>
-          <td>{{ product.asin|default_if_none:"" }}</td>
+          <td>
+            {% if product.url %}
+              <a href="{{ product.url }}" target="_blank" rel="noopener noreferrer">
+                {{ product.asin|default_if_none:"" }}
+              </a>
+            {% else %}
+              {{ product.asin|default_if_none:"" }}
+            {% endif %}
+          </td>
           <td>{{ product.price|default_if_none:"" }}</td>
           <td>{{ product.quantity|default_if_none:"" }}</td>
-          {% comment %} <td>
-            <a href="{% url 'customers:products_view' product.id %}" class="btn btn-primary">View</a>
-            <a href="{% url 'customers:products_update' product.id %}" class="btn btn-primary">Edit</a>
-            <a href="{% url 'customers:products_delete' product.id %}" class="btn btn-danger">Delete</a>
-          </td> {% endcomment %}
         </tr>
         {% endfor %}
       </tbody>

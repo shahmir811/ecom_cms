@@ -8,6 +8,7 @@ import openpyxl
 from .models import Customer, Store
 from .forms import CustomerForm, StoreForm
 from products.models import Product
+from countries.models import Country
 
 # Create your views here.
 class CustomersListView(ListView):
@@ -93,10 +94,12 @@ class StoreProductExcelUploadView(View):
 
     def get(self, request, store_id):
         store = get_object_or_404(Store, id=store_id)
-        return render(request, self.template_name, {'store': store})
+        countries = Country.objects.all()  # Fetch countries for context
+        return render(request, self.template_name, {'store': store, 'countries': countries})
 
     def post(self, request, store_id):
         store = get_object_or_404(Store, id=store_id)
+        countries = Country.objects.all()  # Fetch countries for context
         excel_file = request.FILES.get('excel_file')
 
         if not excel_file:
@@ -115,9 +118,20 @@ class StoreProductExcelUploadView(View):
             # Skip the first row (assuming it's the header)
             for row in sheet.iter_rows(min_row=2, values_only=True):  # Start from row 2
                 asin = row[0]
+                country_id = request.POST.get('country')  # Get the selected country ID from form
+                country = Country.objects.get(id=country_id) if country_id else None
+
                 if asin and asin not in existing_asins:
+                    # Generate URL using the country's website and ASIN
+                    product_url = f"{country.website}/dp/{asin}" if country and country.website else None                    
+                    
                     # Add the new ASIN and link it to the store
-                    Product.objects.create(store=store, asin=asin)
+                    Product.objects.create(
+                        store=store, 
+                        asin=asin, 
+                        country=country,
+                        url=product_url
+                    )
                     existing_asins.add(asin)  # Update the set to avoid re-adding during the same upload
                     count += 1
                 elif asin in existing_asins:

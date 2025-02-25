@@ -1,12 +1,15 @@
 from django.db import models
 
 from customers.models import Store
+from countries.models import Country
 
 # Create your models here.
 class Product(models.Model):
   store = models.ForeignKey(Store, on_delete=models.CASCADE, null=True, blank=True, related_name='products')
+  country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True, related_name='countries')
   name = models.CharField(max_length=500, null=True)
   asin = models.CharField(max_length=150, null=True)
+  url = models.CharField(max_length=150, null=True)
   price = models.CharField(max_length=150, null=True)
   ratings = models.CharField(max_length=150, null=True)
   stars = models.CharField(max_length=150, null=True)

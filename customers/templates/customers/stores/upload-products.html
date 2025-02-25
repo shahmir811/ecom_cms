@@ -27,6 +27,18 @@
                     <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                         {% csrf_token %}
                         <div class="mb-3">
+                            <label for="country" class="form-label">Country</label>
+                            <select name="country" id="country" class="form-select" disabled>
+                                {% for country in countries %}
+                                    <option value="{{ country.id }}" {% if country.name == "United States" %}selected{% endif %}>
+                                        {{ country.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="country" value="{% for country in countries %}{% if country.name == 'United States' %}{{ country.id }}{% endif %}{% endfor %}">
+                        </div>
+
+                        <div class="mb-3">
                             <label for="excel_file" class="form-label">Choose Excel File</label>
                             <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xlsx" required>
                             <div class="invalid-feedback">Please upload a valid Excel file.</div>

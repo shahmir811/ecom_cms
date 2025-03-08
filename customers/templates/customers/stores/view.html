@@ -27,28 +27,34 @@
     <table class="table table-striped table-bordered">
       <thead>
         <tr>
-          <th scope="col">Name</th>
+          <th scope="col">Image</th>
+          <th scope="col">Title</th>
           <th scope="col">ASIN</th>
           <th scope="col">Price</th>
-          <th scope="col">Quantity</th>
+          <th scope="col">Stock</th>
           <th scope="col">Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for product in store.products.all %}
         <tr>
-          <td>{{ product.name|default_if_none:"" }}</td>
           <td>
-            {% if product.url %}
-              <a href="{{ product.url }}" target="_blank" rel="noopener noreferrer">
+            {% if product.image %}
+              <img src="{{ product.image }}" alt="{{ product.title }}" style="max-width: 100px;">
+            {% endif %}
+          </td>
+          <td>{{ product.title|default_if_none:"" }}</td>
+          <td>
+            {% if product.url_amazon %}
+              <a href="{{ product.url_amazon }}" target="_blank" rel="noopener noreferrer">
                 {{ product.asin|default_if_none:"" }}
               </a>
             {% else %}
               {{ product.asin|default_if_none:"" }}
             {% endif %}
           </td>
-          <td>{{ product.price|default_if_none:"" }}</td>
-          <td>{{ product.quantity|default_if_none:"" }}</td>
+          <td>$ {{ product.amazon_current_price|default_if_none:"" }}</td>
+          <td>{{ product.amazon_stock|default_if_none:"" }}</td>
         </tr>
         {% endfor %}
       </tbody>

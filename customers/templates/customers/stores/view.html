@@ -20,7 +20,24 @@
   </div>
 </div>
 
-<h2 class="main-heading">Products</h2>
+<!-- Product Details Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalLabel">Product Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="productDetailsContent">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="main-heading">Products ({{ product_count }})</h2>
 
 <div class="row">
   <div class="col-12">
@@ -36,7 +53,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for product in store.products.all %}
+        {% for product in products %}
         <tr>
           <td>
             {% if product.image %}
@@ -55,11 +72,91 @@
           </td>
           <td>$ {{ product.amazon_current_price|default_if_none:"" }}</td>
           <td>{{ product.amazon_stock|default_if_none:"" }}</td>
+          <td>
+            <button type="button" class="btn btn-primary product-detail-btn" data-bs-toggle="modal" data-bs-target="#productModal" data-product-id="{{ product.id }}">
+              Details
+            </button>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+<!-- Pagination Controls -->
+<nav>
+  <ul class="pagination">
+    {% if products.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+      <li class="page-item"><a class="page-link" href="?page={{ products.previous_page_number }}">Previous</a></li>
+    {% endif %}
+
+    <li class="page-item active"><span class="page-link">{{ products.number }} of {{ products.paginator.num_pages }}</span></li>
+
+    {% if products.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ products.next_page_number }}">Next</a></li>
+      <li class="page-item"><a class="page-link" href="?page={{ products.paginator.num_pages }}">Last &raquo;</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+{% endblock %}
+
+{% block js_files %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const detailButtons = document.querySelectorAll(".product-detail-btn");
+
+    detailButtons.forEach(button => {
+      button.addEventListener("click", function () {
+        const productId = this.getAttribute("data-product-id");
+
+        // Fetch product details via AJAX
+        fetch(`/products/details/${productId}/`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              document.getElementById("productDetailsContent").innerHTML = `
+                <img src="${data.image || ''}" alt="${data.title}" style="max-width: 200px;">
+                <p><strong>Title:</strong> ${data.title || 'N/A'}</p>
+                <p><strong>ASIN:</strong> ${data.asin || 'N/A'}</p>
+                <p><strong>Amazon Price:</strong> $${data.amazon_current_price || 'N/A'}</p>
+                <p><strong>Stock:</strong> ${data.amazon_stock || 'N/A'}</p>
+                <p><strong>List Price (Current):</strong> $${data.list_price_current || 'N/A'}</p>
+                <p><strong>List Price (30 Days Avg):</strong> $${data.list_price_30_days_avg || 'N/A'}</p>
+                <p><strong>Live Offers (FBA):</strong> ${data.live_offers_fba || 'N/A'}</p>
+                <p><strong>Live Offers (FBM):</strong> ${data.live_offers_fbm || 'N/A'}</p>
+                <p><strong>Categories:</strong> ${data.categories_root || 'N/A'} > ${data.categories_sub || 'N/A'}</p>
+                <p><strong>Manufacturer:</strong> ${data.manufacturer || 'N/A'}</p>
+                <p><strong>Unit Count:</strong> ${data.unit_count_value || 'N/A'} ${data.unit_count_type || ''}</p>
+                <p><strong>Material:</strong> ${data.material || 'N/A'}</p>
+                <p><strong>Item Type:</strong> ${data.item_type || 'N/A'}</p>
+                <p><strong>Number of Items:</strong> ${data.number_of_items || 'N/A'}</p>
+                <p><strong>Video Count:</strong> ${data.video_count || 'N/A'}</p>
+                <p><strong>Has Main Video:</strong> ${data.has_main_video ? 'Yes' : 'No'}</p>
+                <p><strong>Package Weight:</strong> ${data.package_weight_g || 'N/A'} g</p>
+                <p><strong>Item Dimensions:</strong> ${data.item_length_cm || 'N/A'} x ${data.item_width_cm || 'N/A'} x ${data.item_height_cm || 'N/A'} cm</p>
+                <p><strong>Batteries Included:</strong> ${data.batteries_included ? 'Yes' : 'No'}</p>
+                <p><strong>Hazardous Materials:</strong> ${data.hazardous_materials || 'N/A'}</p>
+                <p><strong>Description:</strong> ${data.description || 'No description available'}</p>
+              `;
+            } else {
+              document.getElementById("productDetailsContent").innerHTML = `<p>Error loading details.</p>`;
+            }
+          })
+          .catch(error => {
+            console.error("Error fetching product details:", error);
+            document.getElementById("productDetailsContent").innerHTML = `<p>Failed to load details.</p>`;
+          });
+      });
+    });
+
+    // Clear modal content when closed
+    document.getElementById("productModal").addEventListener("hidden.bs.modal", function () {
+      document.getElementById("productDetailsContent").innerHTML = `<p>Loading...</p>`;
+    });
+  });
+</script>
 
 {% endblock %}

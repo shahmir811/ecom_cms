@@ -2,6 +2,8 @@ import re  # Import the re module for regular expressions
 
 import openpyxl
 from django.contrib import messages
+from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
@@ -79,6 +81,19 @@ class StoreDetailsView(DetailView):
     model = Store
     template_name = 'customers/stores/view.html'
     context_object_name = 'store'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['product_count'] = self.object.products.count() # products count
+
+        # Paginate products
+        products = self.object.products.all()  # Assuming a reverse relation named 'products'
+        paginator = Paginator(products, 25)  # Show 25 products per page
+
+        page = self.request.GET.get('page')
+        context['products'] = paginator.get_page(page)
+        
+        return context    
 
 
 class StoreUpdateView(UpdateView):

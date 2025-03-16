@@ -1,6 +1,9 @@
 from django.urls import path
-from .views import CustomersListView, CustomerCreateView, CustomerDetailsView, CustomerUpdateView, StoresListView, StoreCreateView, StoreDetailsView, StoreUpdateView, StoreProductExcelUploadView
 
+from .views import (CustomerCreateView, CustomerDetailsView, CustomersListView,
+                    CustomerUpdateView, StoreCreateView, StoreDetailsView,
+                    StoreProductExcelUploadView, StoresListView,
+                    StoreUpdateView)
 
 app_name = 'customers'
 

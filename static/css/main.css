@@ -33,6 +33,10 @@ body {
 	margin-bottom: 20px;
 }
 
+.ml-20 {
+	margin-left: 20px !important;
+}
+
 .actions-column {
 	display: flex;
 	justify-content: space-evenly;

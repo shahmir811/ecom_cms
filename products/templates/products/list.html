@@ -85,6 +85,7 @@
   <thead>
     <tr>
       <th>Image</th>
+      <th>Store</th>
       <th>Title</th>
       <th>ASIN</th>
       <th>Price</th>
@@ -100,6 +101,7 @@
           <img src="{{ product.image }}" alt="{{ product.title }}" style="max-width: 100px;">
         {% endif %}
       </td>
+      <td>{{ product.store.name }}</td>
       <td>{{ product.title|default_if_none:"" }}</td>
       <td>
         {% if product.url_amazon %}
@@ -250,6 +252,11 @@
           imageCell.appendChild(img);
         }
         row.appendChild(imageCell);
+
+        // Store cell
+        const storeCell = document.createElement("td");
+        storeCell.textContent = product.store_name || "";
+        row.appendChild(storeCell);        
         
         // Title cell
         const titleCell = document.createElement("td");
@@ -372,6 +379,7 @@
             document.getElementById("productDetailsContent").innerHTML = `
               <img src="${data.image || ""}" alt="${data.title}" style="max-width: 200px;">
               <p><strong>Title:</strong> ${data.title || "N/A"}</p>
+              <p><strong>Store:</strong> ${data.store_name || "N/A"}</p>
               <p><strong>ASIN:</strong> ${data.asin || "N/A"}</p>
               <p><strong>Amazon Price:</strong> $${data.amazon_current_price || "N/A"}</p>
               <p><strong>Stock:</strong> ${data.amazon_stock || "N/A"}</p>

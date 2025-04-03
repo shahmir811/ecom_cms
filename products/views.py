@@ -72,10 +72,20 @@ class ProductsListView(ListView):
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             # AJAX request - return JSON data
             page_obj = context['page_obj']
-            products = list(page_obj.object_list.values(
-                'id', 'title', 'asin', 'image', 
-                'amazon_current_price', 'amazon_stock', 'url_amazon'
-            ))
+            products = []
+            
+            for product in page_obj.object_list:
+                product_data = {
+                    'id': product.id,
+                    'title': product.title,
+                    'asin': product.asin,
+                    'image': product.image,
+                    'amazon_current_price': str(product.amazon_current_price) if product.amazon_current_price else None,
+                    'amazon_stock': product.amazon_stock,
+                    'url_amazon': product.url_amazon,
+                    'store_name': product.store.name if product.store else None
+                }
+                products.append(product_data)
             
             data = {
                 'products': products,

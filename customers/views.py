@@ -12,13 +12,14 @@ from django.views.generic import DetailView, ListView, TemplateView, UpdateView
 
 from countries.models import Country
 from products.models import Product
+from users.mixins import SuperuserRequiredView
 
 from .forms import CustomerForm, StoreForm
 from .models import Customer, Store
 
 
 # Create your views here.
-class CustomersListView(ListView):
+class CustomersListView(SuperuserRequiredView, ListView):
     model = Customer
     template_name = 'customers/customers_list.html'
     context_object_name = 'customers'
@@ -27,7 +28,7 @@ class CustomersListView(ListView):
         return Customer.objects.prefetch_related('stores')    
 
 
-class CustomerCreateView(View):
+class CustomerCreateView(SuperuserRequiredView, View):
     template_name = 'customers/create.html'
 
     def get(self, request):
@@ -42,12 +43,12 @@ class CustomerCreateView(View):
             return redirect('customers:list')
         return render(request, self.template_name, {'form': form})
 
-class CustomerDetailsView(DetailView):
+class CustomerDetailsView(SuperuserRequiredView, DetailView):
     model = Customer
     template_name = 'customers/view.html'
     context_object_name = 'customer'
 
-class CustomerUpdateView(UpdateView):
+class CustomerUpdateView(SuperuserRequiredView, UpdateView):
     model = Customer
     form_class = CustomerForm
     template_name = 'customers/update.html'
@@ -57,13 +58,13 @@ class CustomerUpdateView(UpdateView):
         messages.success(self.request, "Customer updated successfully!")
         return super().form_valid(form)
 
-class StoresListView(ListView):
+class StoresListView(SuperuserRequiredView, ListView):
     model = Store
     template_name = 'customers/stores/list.html'
     context_object_name = 'stores'
 
 
-class StoreCreateView(View):
+class StoreCreateView(SuperuserRequiredView, View):
     template_name = 'customers/stores/create.html'
 
     def get(self, request):
@@ -79,7 +80,7 @@ class StoreCreateView(View):
         return render(request, self.template_name, {'form': form})
 
 
-class StoreDetailsView(DetailView):
+class StoreDetailsView(SuperuserRequiredView, DetailView):
     model = Store
     template_name = 'customers/stores/view.html'
     context_object_name = 'store'
@@ -108,7 +109,7 @@ class StoreDetailsView(DetailView):
         return context
 
 
-class StoreUpdateView(UpdateView):
+class StoreUpdateView(SuperuserRequiredView, UpdateView):
     model = Store
     form_class = StoreForm
     template_name = 'customers/stores/update.html'
@@ -119,7 +120,7 @@ class StoreUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class StoreProductExcelUploadView(View):
+class StoreProductExcelUploadView(SuperuserRequiredView, View):
     template_name = 'customers/stores/upload-products.html'  # Ensure this template exists
 
     def get(self, request, store_id):

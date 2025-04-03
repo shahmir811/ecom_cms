@@ -1,16 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.auth.forms import AdminPasswordChangeForm, SetPasswordForm
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LogoutView, PasswordChangeView
-from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
 from django.views.generic import DeleteView, ListView, TemplateView
 from django.views.generic.edit import FormView, UpdateView
 
-from .forms import (CustomAuthenticationForm, UserPasswordUpdateForm,
-                    UserProfileForm, UserRegistrationForm)
+from .forms import (CustomAuthenticationForm, UserProfileForm,
+                    UserRegistrationForm)
+from .mixins import SuperuserRequiredView
 from .models import Profile
 
 
@@ -47,7 +48,7 @@ class CustomLogoutView(LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class UserListView(ListView):
+class UserListView(SuperuserRequiredView, ListView):
     model = User
     template_name = 'users/users_list.html'
     context_object_name = 'users'
@@ -71,7 +72,7 @@ class UserRegistrationView(FormView):
         return super().form_invalid(form)
 
 
-class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
+class UserProfileUpdateView(SuperuserRequiredView, UpdateView):
     model = Profile
     form_class = UserProfileForm
     template_name = 'users/update_profile.html'
@@ -84,7 +85,7 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, "Profile updated successfully!")
         return reverse_lazy('users:list')
 
-class AdminPasswordUpdateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class AdminPasswordUpdateView(SuperuserRequiredView, UserPassesTestMixin, FormView):
     template_name = 'users/update_password.html'
     form_class = SetPasswordForm  # Using SetPasswordForm since old password isn't required
     success_url = reverse_lazy('users:list')
@@ -115,7 +116,7 @@ class AdminPasswordUpdateView(LoginRequiredMixin, UserPassesTestMixin, FormView)
         messages.error(self.request, "Please correct the errors below.")
         return super().form_invalid(form)
 
-class UserDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class UserDeleteView(SuperuserRequiredView, UserPassesTestMixin, DeleteView):
     model = User
     template_name = 'users/delete_user.html'
     success_url = reverse_lazy('users:list')

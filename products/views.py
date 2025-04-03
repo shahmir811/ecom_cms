@@ -1,5 +1,7 @@
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.generic import DetailView, ListView
 
 from .models import Product
 
@@ -41,3 +43,26 @@ def productDetails(request, product_id):
         return JsonResponse(data)
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)
+    
+
+class ProductsListView(ListView):
+    model = Product
+    template_name = 'products/list.html'
+    context_object_name = 'products'
+    paginate_by = 25
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.GET.get('search', '')
+        
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) | 
+                Q(asin__icontains=search_query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context

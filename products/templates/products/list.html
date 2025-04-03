@@ -3,7 +3,6 @@
 {% block page_title %}Products List{% endblock %}
 
 {% block css_files %}
-
 <style>
   .input-group {
     display: flex;
@@ -15,9 +14,26 @@
   }
   .search-button {
     margin: 0px 10px !important;
-  }  
+  }
+  
+  /* Loading spinner for infinite scroll */
+  .loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 20px;
+  }
+  .loading-spinner.active {
+    display: block;
+  }
+  
+  /* No products found message */
+  .no-products {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #6c757d;
+  }
 </style>
-
 {% endblock %}
 
 {% block content %}
@@ -41,21 +57,22 @@
   </div>
 </div>
 
-<!-- Add search form -->
+<!-- Search form -->
 <div class="row mb-4">
   <div class="col-md-6">
-    <form method="get" action="{% url 'products:products-list' %}">
+    <form method="get" action="{% url 'products:products-list' %}" id="searchForm">
       <div class="input-group">
         <input type="text" 
               class="form-control" 
               name="search" 
+              id="searchInput"
               placeholder="Search by title or ASIN"
               value="{{ search_query }}">
           <button class="btn btn-primary search-button" type="submit">
             <i class="fas fa-search"></i> Search
           </button>
         {% if search_query %}
-          <a href="{% url 'products:products-list' %}" class="btn btn-secondary">
+          <a href="{% url 'products:products-list' %}" class="btn btn-secondary" id="clearSearch">
             <i class="bi bi-x-circle"></i> Clear
           </a>
         {% endif %}
@@ -72,127 +89,319 @@
       <th>ASIN</th>
       <th>Price</th>
       <th>Stock</th>
+      <th>Actions</th>
     </tr>
   </thead>
-      <tbody>
-        {% for product in products %}
-        <tr>
-          <td>
-            {% if product.image %}
-              <img src="{{ product.image }}" alt="{{ product.title }}" style="max-width: 100px;">
-            {% endif %}
-          </td>
-          <td>{{ product.title|default_if_none:"" }}</td>
-          <td>
-            {% if product.url_amazon %}
-              <a href="{{ product.url_amazon }}" target="_blank" rel="noopener noreferrer">
-                {{ product.asin|default_if_none:"" }}
-              </a>
-            {% else %}
-              {{ product.asin|default_if_none:"" }}
-            {% endif %}
-          </td>
-          <td>$ {{ product.amazon_current_price|default_if_none:"" }}</td>
-          <td>{{ product.amazon_stock|default_if_none:"" }}</td>
-          <td>
-            <button type="button" class="btn btn-primary product-detail-btn" data-bs-toggle="modal" data-bs-target="#productModal" data-product-id="{{ product.id }}">
-              Details
-            </button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
+  <tbody id="productsTableBody">
+    {% for product in products %}
+    <tr>
+      <td>
+        {% if product.image %}
+          <img src="{{ product.image }}" alt="{{ product.title }}" style="max-width: 100px;">
+        {% endif %}
+      </td>
+      <td>{{ product.title|default_if_none:"" }}</td>
+      <td>
+        {% if product.url_amazon %}
+          <a href="{{ product.url_amazon }}" target="_blank" rel="noopener noreferrer">
+            {{ product.asin|default_if_none:"" }}
+          </a>
+        {% else %}
+          {{ product.asin|default_if_none:"" }}
+        {% endif %}
+      </td>
+      <td>$ {{ product.amazon_current_price|default_if_none:"" }}</td>
+      <td>{{ product.amazon_stock|default_if_none:"" }}</td>
+      <td>
+        <button type="button" class="btn btn-primary product-detail-btn" data-bs-toggle="modal" data-bs-target="#productModal" data-product-id="{{ product.id }}">
+          Details
+        </button>
+      </td>
+    </tr>
+    {% empty %}
+    <tr id="initialNoProducts" style="display: none;">
+      <td colspan="6" class="no-products">No products found</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
 
-{% if is_paginated %}
-  <nav aria-label="Page navigation">
-    <ul class="pagination">
-      {% if page_obj.has_previous %}
-        <li class="page-item">
-          <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; First</a>
-        </li>
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
-        </li>
-      {% endif %}
+<!-- Loading spinner for infinite scroll -->
+<div class="loading-spinner" id="loadingSpinner">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
 
-      <li class="page-item active">
-        <span class="page-link">
-          Page {{ page_obj.number }} of {{ paginator.num_pages }}
-        </span>
-      </li>
-
-      {% if page_obj.has_next %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
-        </li>
-        <li class="page-item">
-          <a class="page-link" href="?page={{ paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last &raquo;</a>
-        </li>
-      {% endif %}
-    </ul>
-  </nav>
-{% endif %}
-
-
+<!-- No more products message (hidden by default) -->
+<div class="text-center mt-3 mb-5" id="noMoreProducts" style="display: none;">
+  <p>No more products to load</p>
+</div>
 
 {% endblock %}
-
 
 {% block js_files %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const detailButtons = document.querySelectorAll(".product-detail-btn");
-
-    detailButtons.forEach(button => {
-      button.addEventListener("click", function () {
-        const productId = this.getAttribute("data-product-id");
-
-        // Fetch product details via AJAX
-        fetch(`/products/details/${productId}/`)
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              document.getElementById("productDetailsContent").innerHTML = `
-                <img src="${data.image || ''}" alt="${data.title}" style="max-width: 200px;">
-                <p><strong>Title:</strong> ${data.title || 'N/A'}</p>
-                <p><strong>ASIN:</strong> ${data.asin || 'N/A'}</p>
-                <p><strong>Amazon Price:</strong> $${data.amazon_current_price || 'N/A'}</p>
-                <p><strong>Stock:</strong> ${data.amazon_stock || 'N/A'}</p>
-                <p><strong>List Price (Current):</strong> $${data.list_price_current || 'N/A'}</p>
-                <p><strong>List Price (30 Days Avg):</strong> $${data.list_price_30_days_avg || 'N/A'}</p>
-                <p><strong>Live Offers (FBA):</strong> ${data.live_offers_fba || 'N/A'}</p>
-                <p><strong>Live Offers (FBM):</strong> ${data.live_offers_fbm || 'N/A'}</p>
-                <p><strong>Categories:</strong> ${data.categories_root || 'N/A'} > ${data.categories_sub || 'N/A'}</p>
-                <p><strong>Manufacturer:</strong> ${data.manufacturer || 'N/A'}</p>
-                <p><strong>Unit Count:</strong> ${data.unit_count_value || 'N/A'} ${data.unit_count_type || ''}</p>
-                <p><strong>Material:</strong> ${data.material || 'N/A'}</p>
-                <p><strong>Item Type:</strong> ${data.item_type || 'N/A'}</p>
-                <p><strong>Number of Items:</strong> ${data.number_of_items || 'N/A'}</p>
-                <p><strong>Video Count:</strong> ${data.video_count || 'N/A'}</p>
-                <p><strong>Has Main Video:</strong> ${data.has_main_video ? 'Yes' : 'No'}</p>
-                <p><strong>Package Weight:</strong> ${data.package_weight_g || 'N/A'} g</p>
-                <p><strong>Item Dimensions:</strong> ${data.item_length_cm || 'N/A'} x ${data.item_width_cm || 'N/A'} x ${data.item_height_cm || 'N/A'} cm</p>
-                <p><strong>Batteries Included:</strong> ${data.batteries_included ? 'Yes' : 'No'}</p>
-                <p><strong>Hazardous Materials:</strong> ${data.hazardous_materials || 'N/A'}</p>
-                <p><strong>Description:</strong> ${data.description || 'No description available'}</p>
-              `;
-            } else {
-              document.getElementById("productDetailsContent").innerHTML = `<p>Error loading details.</p>`;
-            }
-          })
-          .catch(error => {
-            console.error("Error fetching product details:", error);
-            document.getElementById("productDetailsContent").innerHTML = `<p>Failed to load details.</p>`;
-          });
+    // Variables for infinite scroll
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMore = true;
+    let currentSearchQuery = "{{ search_query }}";
+    
+    // Initialize the initial no products message
+    const initialProducts = document.querySelectorAll("#productsTableBody tr");
+    if (initialProducts.length === 0 && !currentSearchQuery) {
+      document.getElementById("initialNoProducts").style.display = "table-row";
+    }
+    
+    // Product details modal functionality
+    function setupProductDetailButtons() {
+      document.querySelectorAll(".product-detail-btn").forEach(button => {
+        button.addEventListener("click", function() {
+          const productId = this.getAttribute("data-product-id");
+          fetchProductDetails(productId);
+        });
       });
+    }
+    
+    // Set up initial product detail buttons
+    setupProductDetailButtons();
+    
+    // Infinite scroll implementation
+    window.addEventListener("scroll", function() {
+      if (shouldLoadMore()) {
+        loadMoreProducts();
+      }
     });
 
-    // Clear modal content when closed
-    document.getElementById("productModal").addEventListener("hidden.bs.modal", function () {
-      document.getElementById("productDetailsContent").innerHTML = `<p>Loading...</p>`;
+    function shouldLoadMore() {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      return (scrollTop + clientHeight >= scrollHeight - 100) && !isLoading && hasMore;
+    }
+
+    function loadMoreProducts() {
+      const loadingSpinner = document.getElementById("loadingSpinner");
+      const productsTableBody = document.getElementById("productsTableBody");
+      
+      isLoading = true;
+      loadingSpinner.classList.add("active");
+      
+      fetch(buildProductsUrl(currentPage + 1, currentSearchQuery), {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
+      .then(data => {
+        if (data.products && data.products.length > 0) {
+          currentPage++;
+          appendProducts(data.products);
+          hasMore = data.has_next;
+          
+          if (!hasMore) {
+            document.getElementById("noMoreProducts").style.display = "block";
+          }
+        } else {
+          hasMore = false;
+          document.getElementById("noMoreProducts").style.display = "block";
+        }
+      })
+      .catch(error => {
+        console.error("Error loading more products:", error);
+        hasMore = false;
+      })
+      .finally(() => {
+        isLoading = false;
+        loadingSpinner.classList.remove("active");
+      });
+    }
+    
+    function buildProductsUrl(page, searchQuery) {
+      let url = `?page=${page}`;
+      if (searchQuery) {
+        url += `&search=${encodeURIComponent(searchQuery)}`;
+      }
+      return url;
+    }
+    
+    function appendProducts(products) {
+      const productsTableBody = document.getElementById("productsTableBody");
+      
+      // Hide initial no products message if it exists
+      const initialNoProducts = document.getElementById("initialNoProducts");
+      if (initialNoProducts) {
+        initialNoProducts.style.display = "none";
+      }
+      
+      products.forEach(product => {
+        const row = document.createElement("tr");
+        
+        // Image cell
+        const imageCell = document.createElement("td");
+        if (product.image) {
+          const img = document.createElement("img");
+          img.src = product.image;
+          img.alt = product.title;
+          img.style.maxWidth = "100px";
+          imageCell.appendChild(img);
+        }
+        row.appendChild(imageCell);
+        
+        // Title cell
+        const titleCell = document.createElement("td");
+        titleCell.textContent = product.title || "";
+        row.appendChild(titleCell);
+        
+        // ASIN cell
+        const asinCell = document.createElement("td");
+        if (product.url_amazon) {
+          const link = document.createElement("a");
+          link.href = product.url_amazon;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = product.asin || "";
+          asinCell.appendChild(link);
+        } else {
+          asinCell.textContent = product.asin || "";
+        }
+        row.appendChild(asinCell);
+        
+        // Price cell
+        const priceCell = document.createElement("td");
+        priceCell.textContent = product.amazon_current_price ? "$ " + product.amazon_current_price : "";
+        row.appendChild(priceCell);
+        
+        // Stock cell
+        const stockCell = document.createElement("td");
+        stockCell.textContent = product.amazon_stock || "";
+        row.appendChild(stockCell);
+        
+        // Details button cell
+        const buttonCell = document.createElement("td");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-primary product-detail-btn";
+        button.setAttribute("data-bs-toggle", "modal");
+        button.setAttribute("data-bs-target", "#productModal");
+        button.setAttribute("data-product-id", product.id);
+        button.textContent = "Details";
+        buttonCell.appendChild(button);
+        row.appendChild(buttonCell);
+        
+        productsTableBody.appendChild(row);
+      });
+      
+      // Set up event listeners for new buttons
+      setupProductDetailButtons();
+    }
+    
+    // Search form submission handler
+    const searchForm = document.getElementById("searchForm");
+    searchForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+      performSearch();
     });
+    
+    // Clear search handler
+    const clearSearchBtn = document.getElementById("clearSearch");
+    if (clearSearchBtn) {
+      clearSearchBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        document.getElementById("searchInput").value = "";
+        currentSearchQuery = "";
+        performSearch();
+      });
+    }
+    
+    function performSearch() {
+      const searchInput = document.getElementById("searchInput");
+      currentSearchQuery = searchInput.value.trim();
+      
+      // Reset infinite scroll state
+      resetProductsTable();
+      
+      // Load first page with search query
+      fetch(buildProductsUrl(1, currentSearchQuery), {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
+      .then(data => {
+        if (data.products && data.products.length > 0) {
+          appendProducts(data.products);
+          hasMore = data.has_next;
+          currentPage = 1;
+          
+          if (!hasMore) {
+            document.getElementById("noMoreProducts").style.display = "block";
+          }
+        } else {
+          const productsTableBody = document.getElementById("productsTableBody");
+          productsTableBody.innerHTML = '<tr><td colspan="6" class="no-products">No products found</td></tr>';
+          hasMore = false;
+        }
+      })
+      .catch(error => {
+        console.error("Error searching products:", error);
+      });
+    }
+    
+    function resetProductsTable() {
+      const productsTableBody = document.getElementById("productsTableBody");
+      productsTableBody.innerHTML = "";
+      document.getElementById("noMoreProducts").style.display = "none";
+      currentPage = 0; // Will be incremented to 1 when first load completes
+      hasMore = true;
+      isLoading = false;
+    }
+    
+    // Helper function to fetch product details
+    function fetchProductDetails(productId) {
+      fetch(`/products/details/${productId}/`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById("productDetailsContent").innerHTML = `
+              <img src="${data.image || ""}" alt="${data.title}" style="max-width: 200px;">
+              <p><strong>Title:</strong> ${data.title || "N/A"}</p>
+              <p><strong>ASIN:</strong> ${data.asin || "N/A"}</p>
+              <p><strong>Amazon Price:</strong> $${data.amazon_current_price || "N/A"}</p>
+              <p><strong>Stock:</strong> ${data.amazon_stock || "N/A"}</p>
+              <p><strong>List Price (Current):</strong> $${data.list_price_current || "N/A"}</p>
+              <p><strong>List Price (30 Days Avg):</strong> $${data.list_price_30_days_avg || "N/A"}</p>
+              <p><strong>Live Offers (FBA):</strong> ${data.live_offers_fba || "N/A"}</p>
+              <p><strong>Live Offers (FBM):</strong> ${data.live_offers_fbm || "N/A"}</p>
+              <p><strong>Categories:</strong> ${data.categories_root || "N/A"} > ${data.categories_sub || "N/A"}</p>
+              <p><strong>Manufacturer:</strong> ${data.manufacturer || "N/A"}</p>
+              <p><strong>Unit Count:</strong> ${data.unit_count_value || "N/A"} ${data.unit_count_type || ""}</p>
+              <p><strong>Material:</strong> ${data.material || "N/A"}</p>
+              <p><strong>Item Type:</strong> ${data.item_type || "N/A"}</p>
+              <p><strong>Number of Items:</strong> ${data.number_of_items || "N/A"}</p>
+              <p><strong>Video Count:</strong> ${data.video_count || "N/A"}</p>
+              <p><strong>Has Main Video:</strong> ${data.has_main_video ? "Yes" : "No"}</p>
+              <p><strong>Package Weight:</strong> ${data.package_weight_g || "N/A"} g</p>
+              <p><strong>Item Dimensions:</strong> ${data.item_length_cm || "N/A"} x ${data.item_width_cm || "N/A"} x ${data.item_height_cm || "N/A"} cm</p>
+              <p><strong>Batteries Included:</strong> ${data.batteries_included ? "Yes" : "No"}</p>
+              <p><strong>Hazardous Materials:</strong> ${data.hazardous_materials || "N/A"}</p>
+              <p><strong>Description:</strong> ${data.description || "No description available"}</p>
+            `;
+          } else {
+            document.getElementById("productDetailsContent").innerHTML = `<p>Error loading details.</p>`;
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching product details:", error);
+          document.getElementById("productDetailsContent").innerHTML = `<p>Failed to load details.</p>`;
+        });
+    }
   });
 </script>
-
 {% endblock %}

@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -49,7 +50,7 @@ class ProductsListView(ListView):
     model = Product
     template_name = 'products/list.html'
     context_object_name = 'products'
-    paginate_by = 25
+    paginate_by = 25  # This will be our page size for infinite scroll
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -66,3 +67,21 @@ class ProductsListView(ListView):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # AJAX request - return JSON data
+            page_obj = context['page_obj']
+            products = list(page_obj.object_list.values(
+                'id', 'title', 'asin', 'image', 
+                'amazon_current_price', 'amazon_stock', 'url_amazon'
+            ))
+            
+            data = {
+                'products': products,
+                'has_next': page_obj.has_next(),
+                'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None
+            }
+            return JsonResponse(data)
+        # Regular request - return HTML
+        return super().render_to_response(context, **response_kwargs)

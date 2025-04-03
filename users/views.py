@@ -1,19 +1,18 @@
-from django.views.generic import TemplateView, ListView, DeleteView
-from django.contrib.auth.forms import AdminPasswordChangeForm
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.views.generic.edit import UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LogoutView, PasswordChangeView
-from django.urls import reverse_lazy
-from django.views.generic.edit import FormView
-from django.contrib.auth.models import User
-from django.contrib.auth import login 
 from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth.forms import AdminPasswordChangeForm, SetPasswordForm
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.models import User
+from django.contrib.auth.views import LogoutView, PasswordChangeView
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.forms import SetPasswordForm
+from django.urls import reverse_lazy
+from django.views.generic import DeleteView, ListView, TemplateView
+from django.views.generic.edit import FormView, UpdateView
 
-from .forms import CustomAuthenticationForm, UserRegistrationForm, UserProfileForm, UserPasswordUpdateForm
+from .forms import (CustomAuthenticationForm, UserPasswordUpdateForm,
+                    UserProfileForm, UserRegistrationForm)
 from .models import Profile
+
 
 class StartingPageView(TemplateView):
     template_name = "users/starting_page.html"
@@ -79,7 +78,7 @@ class UserProfileUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         """Ensure users can only edit their own profile."""
-        return get_object_or_404(Profile, user=self.request.user)
+        return get_object_or_404(Profile, user_id=self.kwargs['pk'])
 
     def get_success_url(self):
         messages.success(self.request, "Profile updated successfully!")

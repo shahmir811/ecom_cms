@@ -15,17 +15,24 @@
                 Hi {{ request.user.username }}
               </a>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{% url "customers:list" %}">Customers</a></li>
+                {% if request.user.is_superuser %}
+                  <li><a class="dropdown-item" href="{% url "users:list" %}">Users</a></li>
+                  <li><a class="dropdown-item" href="{% url "customers:list" %}">Customers</a></li>
+                {% endif %}
                 <li><a class="dropdown-item" href="{% url "customers:stores_list" %}">Stores</a></li>
                 <li><a class="dropdown-item" href="{% url "products:products-list" %}">Products</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                {% comment %} 
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="#">Something else here</a></li>
+                {% endcomment %}
               </ul>
             </li>
+            {% comment %} 
             <li class="nav-item">
-              {% comment %} <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}" href="{% url 'users:list' %}">Users</a> {% endcomment %}
+              <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}" href="{% url 'users:list' %}">Users</a>
               <a class="nav-link {% if 'users' in request.path %}active{% endif %}" href="{% url 'users:list' %}">Users</a>
             </li>
+            {% endcomment %}
             <li class="nav-item" style="align-self: center;">
               <form action="{% url 'users:logout' %}" method="post" class="d-inline">
                 {% csrf_token %}

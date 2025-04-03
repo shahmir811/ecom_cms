@@ -2,13 +2,13 @@ import re  # Import the re module for regular expressions
 
 import openpyxl
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, ListView, TemplateView, UpdateView
+from django.views.generic import DetailView, ListView, UpdateView
 
 from countries.models import Country
 from products.models import Product
@@ -58,7 +58,7 @@ class CustomerUpdateView(SuperuserRequiredView, UpdateView):
         messages.success(self.request, "Customer updated successfully!")
         return super().form_valid(form)
 
-class StoresListView(SuperuserRequiredView, ListView):
+class StoresListView(LoginRequiredMixin, ListView):
     model = Store
     template_name = 'customers/stores/list.html'
     context_object_name = 'stores'
@@ -80,7 +80,7 @@ class StoreCreateView(SuperuserRequiredView, View):
         return render(request, self.template_name, {'form': form})
 
 
-class StoreDetailsView(SuperuserRequiredView, DetailView):
+class StoreDetailsView(LoginRequiredMixin, DetailView):
     model = Store
     template_name = 'customers/stores/view.html'
     context_object_name = 'store'

@@ -1,5 +1,7 @@
 {% extends "main.html" %}
 
+{% load static %}
+
 {% block page_title %}Upload Products{% endblock %}
 
 {% block content %}
@@ -43,6 +45,17 @@
                             <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xlsx" required>
                             <div class="invalid-feedback">Please upload a valid Excel file.</div>
                         </div>
+                        <div class="mb-3">
+                            <label for="excel_file" class="form-label">Choose Excel File</label>
+                            <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xlsx" required>
+                            <div class="invalid-feedback">Please upload a valid Excel file.</div>
+                            <small class="form-text text-muted">
+                                <a href="{% static 'samples/KeepaExport-file.xlsx' %}" download>
+                                    Sample Excel file
+                                </a>
+                            </small>
+                        </div>
+                        
                         <button type="submit" class="btn btn-success w-100">Upload</button>
                     </form>
                     <a href="{% url "customers:stores_list" %}" type="button" class="btn btn-danger w-100 mt-10">Cancel</a>
